@@ -20,3 +20,6 @@ Thumbs.db
 
 # 日志文件
 *.log
+
+# Trae 相关文件
+.trae/
