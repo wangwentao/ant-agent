@@ -42,10 +42,17 @@ func (c *SkillCatalog) DiscoverSkills() error {
 	// Clear existing skills before re-scanning
 	c.skills = make(map[string]*Skill)
 
+	// Get executable directory for project-level skills
+	execPath, err := os.Executable()
+	execDir := "."
+	if err == nil {
+		execDir = filepath.Dir(execPath)
+	}
+
 	// Scan common skill directories
 	dirsToScan := []string{
-		// Project-level
-		"./.agents/skills",
+		// Project-level (in executable directory)
+		filepath.Join(execDir, ".agents/skills"),
 		// User-level (cross-platform)
 		filepath.Join(os.Getenv("HOME"), ".agents/skills"),
 	}

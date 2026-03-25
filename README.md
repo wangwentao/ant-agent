@@ -164,3 +164,58 @@ You »: exit
 - 命令补全功能支持基本命令和技能名称的补全
 - 工具执行有安全限制，某些危险命令会被阻止
 - 技能描述在启动时会被截断显示，使用 `show-skills` 命令查看完整描述
+
+## 与 WeClaw 集成
+
+Ant Agent 可以与 [WeClaw](https://github.com/fastclaw-ai/weclaw) 项目集成，作为 WeChat 的 AI 代理。
+
+### WeClaw 配置
+
+在 WeClaw 的配置文件 `~/.weclaw/config.json` 中添加 Ant Agent 配置：
+
+```json
+{
+  "default_agent": "ant",
+  "agents": {
+    "ant": {
+      "type": "cli",
+      "command": "/path/to/ant-agent",
+      "model": "claude-3-opus-20240229"
+    }
+  }
+}
+```
+
+### 支持的参数
+
+Ant Agent 支持 WeClaw 需要的以下参数：
+
+- `-p <message>`: 接收消息内容
+- `--output-format stream-json`: 输出 JSON 格式的事件
+- `--resume <session_id>`: 恢复现有会话
+- `--model <model_name>`: 指定使用的模型
+- `--append-system-prompt <prompt>`: 添加系统提示
+
+### 集成原理
+
+WeClaw 通过以下方式与 Ant Agent 交互：
+
+1. WeClaw 发送消息到 Ant Agent：`ant-agent -p "Hello" --output-format stream-json`
+2. Ant Agent 处理消息并返回 JSON 格式的事件：
+   - 会话事件：包含会话 ID
+   - 结果事件：包含处理结果
+3. WeClaw 解析 JSON 事件并将结果发送到 WeChat
+
+### 测试集成
+
+```bash
+# 测试 Ant Agent 是否能正确处理 WeClaw 格式的请求
+./ant-agent -p "Hello, world!" --output-format stream-json
+```
+
+预期输出：
+
+```json
+{"type":"session","session_id":"session_123456789","result":"","is_error":false}
+{"type":"result","session_id":"session_123456789","result":"Hello! I'm Ant Agent...","is_error":false}
+```

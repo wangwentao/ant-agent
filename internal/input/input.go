@@ -49,7 +49,7 @@ func (h *InputHandler) ReadInput() (string, error) {
 	}
 
 	// 回退到基本输入方式
-	fmt.Print("You »:")
+	fmt.Print("\033[34mYou »:\033[0m")
 	var input string
 	_, err := fmt.Scanln(&input)
 	return input, err
@@ -243,7 +243,7 @@ func (h *InputHandler) showSkills() {
 
 		// 格式化技能描述，实现自动换行和缩进
 		description := skill.Description
-		lineLength := 130                 // 每行最大长度
+		lineLength := 100                 // 每行最大长度
 		prefixLength := maxNameLength + 6 // 前缀长度（包括空格和连字符）
 		remainingLength := lineLength - prefixLength
 

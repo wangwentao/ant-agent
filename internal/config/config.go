@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 // Config 配置结构体
@@ -18,8 +19,17 @@ type Config struct {
 func LoadConfig() (Config, error) {
 	var config Config
 
+	// 尝试在可执行文件所在目录读取配置文件
+	execPath, err := os.Executable()
+	if err != nil {
+		// 如果无法获取可执行文件路径，尝试当前目录
+		execPath = "."
+	}
+	execDir := filepath.Dir(execPath)
+	configPath := filepath.Join(execDir, "config.json")
+
 	// 尝试读取配置文件
-	file, err := os.Open("config.json")
+	file, err := os.Open(configPath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			// 配置文件不存在，返回默认配置
