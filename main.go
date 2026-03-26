@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"ant-agent/internal/acp"
 	"ant-agent/internal/config"
 	"ant-agent/internal/input"
 	"ant-agent/internal/logs"
@@ -24,31 +25,32 @@ func main() {
 		help           bool
 		version        bool
 		nonInteractive bool
-		// 集成 clawbot，添加 -p 参数支持
+		// 模拟 claude code 的行为，添加 -p 参数支持
 		pFlag string
-		// 集成 WeClaw，添加以下参数
+		// 模拟 claude code 的行为，添加以下参数
 		outputFormat    string
 		resumeSessionID string
 		model           string
 		systemPrompt    string
+		// 模拟 claude code 的行为，添加 --verbose 参数（忽略实际值）
+		verbose bool
+		// 流式响应参数
+		stream bool
+		// ACP 模式参数
+		acpMode bool
 	)
 
 	flag.BoolVar(&help, "help", false, "Show help information")
 	flag.BoolVar(&version, "version", false, "Show version information")
 	flag.BoolVar(&nonInteractive, "non-interactive", false, "Run in non-interactive mode")
-	// 为了兼容 clawbot，添加 -p 参数支持
 	flag.StringVar(&pFlag, "p", "", "Compatibility parameter for clawbot")
-	// 为了兼容 WeClaw，添加以下参数
 	flag.StringVar(&outputFormat, "output-format", "", "Output format (stream-json for WeClaw compatibility)")
 	flag.StringVar(&resumeSessionID, "resume", "", "Resume existing session")
 	flag.StringVar(&model, "model", "", "Specify model to use")
 	flag.StringVar(&systemPrompt, "append-system-prompt", "", "Append system prompt")
-	// 为了兼容 WeClaw，添加 --verbose 参数（忽略实际值）
-	var verbose bool
 	flag.BoolVar(&verbose, "verbose", false, "Verbose output (ignored)")
-	// 添加流式响应参数
-	var stream bool
 	flag.BoolVar(&stream, "stream", true, "Use streaming response from model")
+	flag.BoolVar(&acpMode, "acp", false, "Run in ACP mode")
 	flag.Parse()
 
 	// 处理命令行参数
@@ -66,16 +68,20 @@ func main() {
 	}
 
 	// 加载配置
-	cfg, err := config.LoadConfig()
+	appConfig, err := config.LoadAppConfig()
 	if err != nil {
 		logs.Warn("%v", err)
 		// 继续执行，使用默认配置
+		appConfig = config.DefaultConfig()
 	}
 
 	// 如果指定了模型，覆盖配置中的模型
 	if model != "" {
-		cfg.Model = model
+		appConfig.Model = model
 	}
+
+	// 设置流式响应
+	appConfig.Stream = stream
 
 	// 初始化技能系统
 	skillCatalog := skills.NewSkillCatalog()
@@ -84,21 +90,8 @@ func main() {
 	}
 
 	// 获取API Key
-	apiKey := config.GetAPIKey(cfg)
+	apiKey := appConfig.GetAPIKey()
 	if apiKey == "" {
-		// 当被 WeClaw 调用时，返回错误而不是直接退出
-		if pFlag != "" {
-			result := "Error: API key not found in config file or environment variable"
-			if weclaw.ShouldUseStreamJSON(outputFormat) {
-				// 生成会话ID
-				sessionID := weclaw.GenerateSessionID(resumeSessionID)
-				// 输出错误事件
-				weclaw.OutputResultEvent(sessionID, result, true)
-			} else {
-				fmt.Println(result)
-			}
-			return
-		}
 		// 在交互式模式下，仍然直接退出
 		logs.Fatal("API key not found in config file or environment variable")
 	}
@@ -109,8 +102,8 @@ func main() {
 	}
 
 	// 如果配置了BaseURL，使用它
-	if cfg.BaseURL != "" {
-		clientOptions = append(clientOptions, option.WithBaseURL(cfg.BaseURL))
+	if appConfig.BaseURL != "" {
+		clientOptions = append(clientOptions, option.WithBaseURL(appConfig.BaseURL))
 	}
 
 	client := anthropic.NewClient(clientOptions...)
@@ -120,28 +113,41 @@ func main() {
 	toolRegistry := tools.NewToolRegistry(skillCatalog)
 
 	// 初始化消息处理器
-	messageHandler := messages.NewMessageHandler(skillCatalog, toolRegistry)
+	messageHandler := messages.NewMessageHandler(skillCatalog, toolRegistry, appConfig)
 
 	// 初始化输入处理器
 	inputHandler := input.NewInputHandler(skillCatalog)
+
+	// 处理 ACP 模式
+	if acpMode {
+		// 设置 ACP 模式
+		appConfig.ACPMode = true
+
+		// 创建 ACP 服务器
+		server := acp.NewServer(client, skillCatalog, toolRegistry, appConfig)
+
+		// 启动 ACP 服务器
+		ctx := context.Background()
+		if err := server.Start(ctx); err != nil {
+			logs.Error("ACP server error: %v", err)
+			return
+		}
+
+		return
+	}
 
 	// 处理 -p 参数（WeClaw 兼容性）
 	if pFlag != "" {
 		// 生成会话ID
 		sessionID := weclaw.GenerateSessionID(resumeSessionID)
 
-		// 配置映射，传递给消息处理器
-		configMap := map[string]interface{}{
-			"model":         cfg.Model,
-			"max_tokens":    cfg.MaxTokens,
-			"stream":        stream,
-			"output_format": outputFormat,
-			"session_id":    sessionID,
-		}
+		// 设置 WeClaw 相关配置
+		appConfig.OutputFormat = outputFormat
+		appConfig.SessionID = sessionID
 
 		// 处理系统提示
 		if systemPrompt != "" {
-			configMap["system_prompt"] = systemPrompt
+			appConfig.SystemPrompt = systemPrompt
 		}
 
 		// 处理消息并获取结果
@@ -149,7 +155,7 @@ func main() {
 		var err error
 
 		// 处理消息
-		result, err = messageHandler.ProcessMessage(ctx, client, pFlag, configMap)
+		result, err = messageHandler.ProcessMessage(ctx, client, pFlag, appConfig)
 		if err != nil {
 			result = fmt.Sprintf("Error: %v", err)
 			if weclaw.ShouldUseStreamJSON(outputFormat) {
@@ -195,7 +201,7 @@ func main() {
 	fmt.Println()
 
 	// 显示大模型访问地址
-	baseURL := cfg.BaseURL
+	baseURL := appConfig.BaseURL
 	if baseURL == "" {
 		baseURL = "https://api.anthropic.com"
 	}
@@ -239,12 +245,7 @@ func main() {
 		}
 
 		// 处理消息
-		configMap := map[string]interface{}{
-			"model":      cfg.Model,
-			"max_tokens": cfg.MaxTokens,
-			"stream":     stream,
-		}
-		if _, err := messageHandler.ProcessMessage(ctx, client, processedInput, configMap); err != nil {
+		if _, err := messageHandler.ProcessMessage(ctx, client, processedInput, appConfig); err != nil {
 			logs.Error("Error processing message: %v", err)
 		}
 	}

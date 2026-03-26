@@ -7,6 +7,7 @@ toolchain go1.24.3
 require (
 	github.com/anthropics/anthropic-sdk-go v1.27.1
 	github.com/chzyer/readline v1.5.1
+	github.com/coder/acp-go-sdk v0.6.3
 	gopkg.in/yaml.v2 v2.4.0
 )
 
