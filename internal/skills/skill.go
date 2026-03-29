@@ -52,7 +52,7 @@ func (c *SkillCatalog) DiscoverSkills() error {
 	// Scan common skill directories
 	dirsToScan := []string{
 		// Project-level (in executable directory)
-		filepath.Join(execDir, ".agents/skills"),
+		filepath.Join(execDir, ".ant/skills"),
 		// User-level (cross-platform)
 		filepath.Join(os.Getenv("HOME"), ".agents/skills"),
 	}
