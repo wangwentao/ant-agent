@@ -60,7 +60,7 @@
 
 ### 配置项说明
 
-- `api_key`: Anthropic API 密钥
+- `api_key`: LLM 密钥
 - `model`: 使用的模型名称，默认为 `qwen3.5-27b-claude-4.6-opus-reasoning-distilled`
 - `base_url`: API 基础 URL，默认为 `http://localhost:1234`
 - `max_tokens`: 模型最大输出 tokens，默认为 1024
@@ -129,7 +129,7 @@ Ant Agent 支持以下工具调用：
 
 Ant Agent 具有强大的技能系统，支持以下功能：
 
-- **技能发现**: 自动发现项目内（`.ant/skills`）和用户主目录下（`~/.ant/skills`）的技能
+- **技能发现**: 自动发现项目内（`.ant/skills`）和用户主目录下（`~/.agent/skills`）的技能
 - **技能安装**: 通过 `install-skill` 命令从本地目录或 GitHub 仓库安装技能
 - **技能删除**: 通过 `remove-skill` 命令删除指定技能
 - **技能激活**: 通过 `activate_skill` 工具激活指定技能以获取详细说明
