@@ -385,7 +385,7 @@ func (h *MessageHandler) parseToolInput(currentToolInput string, toolUseBlock an
 	}
 
 	// 然后尝试从 toolUseBlock 中获取工具输入
-	if toolUseBlock.Input != nil && len(toolUseBlock.Input) > 0 {
+	if len(toolUseBlock.Input) > 0 {
 		if err := json.Unmarshal(toolUseBlock.Input, &input); err == nil && len(input) > 0 {
 			logs.Debug("Using tool input from ToolUseBlock: %v", input)
 			return input
