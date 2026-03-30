@@ -13,6 +13,7 @@ type Config struct {
 	Model     string `json:"model"`
 	BaseURL   string `json:"base_url"`
 	MaxTokens int    `json:"max_tokens"`
+	Name      string `json:"name"`
 }
 
 // LoadConfig 读取配置文件
@@ -34,9 +35,10 @@ func LoadConfig() (Config, error) {
 		if os.IsNotExist(err) {
 			// 配置文件不存在，返回默认配置
 			return Config{
-				Model:     "claude-3-opus-20240229",
-				BaseURL:   "https://api.anthropic.com",
-				MaxTokens: 1024,
+				Model:     "qwen3.5-27b-claude-4.6-opus-reasoning-distilled",
+				BaseURL:   "http://127.0.0.1:1234",
+				MaxTokens: 4096,
+				Name:      "Ant",
 			}, nil
 		}
 		return Config{}, fmt.Errorf("error opening config file: %w", err)
@@ -50,10 +52,16 @@ func LoadConfig() (Config, error) {
 
 	// 设置默认值
 	if config.Model == "" {
-		config.Model = "claude-3-opus-20240229"
+		config.Model = "qwen3.5-27b-claude-4.6-opus-reasoning-distilled"
 	}
 	if config.BaseURL == "" {
-		config.BaseURL = "https://api.anthropic.com"
+		config.BaseURL = "http://127.0.0.1:1234"
+	}
+	if config.MaxTokens == 0 {
+		config.MaxTokens = 4096
+	}
+	if config.Name == "" {
+		config.Name = "Ant"
 	}
 
 	return config, nil

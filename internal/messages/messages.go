@@ -34,7 +34,8 @@ func NewMessageHandler(skillCatalog *skills.SkillCatalog, toolRegistry *tools.To
 
 // BuildSystemPrompt 构建系统提示
 func (h *MessageHandler) BuildSystemPrompt() string {
-	systemPrompt := "You are a comprehensive, clear-thinking, and logically rigorous personal assistant. You can complete most work and life tasks, and for tasks in areas where you are not proficient, you can compensate by using skills.\n\n" +
+	agentName := h.appConfig.AgentName
+	systemPrompt := "Your name is " + agentName + ". You are a comprehensive, clear-thinking, and logically rigorous personal assistant. You can complete most work and life tasks, and for tasks in areas where you are not proficient, you can compensate by using skills.\n\n" +
 		"## Available Skills\n" +
 		"Here are the skills you can use:\n"
 
@@ -284,7 +285,7 @@ func (h *MessageHandler) processNonStreamingResponse(ctx context.Context, client
 			if textContent != "" {
 				currentText += textContent + "\n"
 				// 同时输出到标准输出，保持原有行为
-				fmt.Printf("\033[32mAnt »:\033[0m %s\n", textContent)
+				fmt.Printf("\033[32m%s »:\033[0m %s\n", appConfig.AgentName, textContent)
 			}
 			assistantContent = append(assistantContent, anthropic.NewTextBlock(content.Text))
 		case "tool_use":
@@ -329,7 +330,7 @@ func (h *MessageHandler) handleDeltaOutput(ctx context.Context, deltaText string
 		// 非 weclaw 模式，进行普通的流式输出
 		// 如果还没有显示前缀且有实际内容，先显示前缀
 		if !*prefixShown && hasContent {
-			fmt.Print("\033[32mAnt »:\033[0m ")
+			fmt.Printf("\033[32m%s »:\033[0m ", appConfig.AgentName)
 			*prefixShown = true
 		}
 		// 实时输出文本内容，保留原始格式（包括换行符）

@@ -116,7 +116,7 @@ func main() {
 	messageHandler := messages.NewMessageHandler(skillCatalog, toolRegistry, appConfig)
 
 	// 初始化输入处理器
-	inputHandler := input.NewInputHandler(skillCatalog)
+	inputHandler := input.NewInputHandler(skillCatalog, appConfig.AgentName)
 
 	// 处理 ACP 模式
 	if acpMode {
@@ -172,7 +172,7 @@ func main() {
 
 	// 显示启动信息
 	fmt.Println()
-	fmt.Println("=== Ant Agent 启动成功 ===")
+	fmt.Printf("=== %s 启动成功 ===\n", appConfig.AgentName)
 	fmt.Println()
 	fmt.Println("📋 可用指令:")
 	fmt.Println("  help, ?          - 显示帮助信息")

@@ -16,16 +16,17 @@ type InputHandler struct {
 	skillCatalog *skills.SkillCatalog
 	readline     *readline.Instance
 	cmdRegistry  *cmd.CommandRegistry
+	agentName    string
 }
 
 // NewInputHandler 创建一个新的输入处理器
-func NewInputHandler(skillCatalog *skills.SkillCatalog) *InputHandler {
+func NewInputHandler(skillCatalog *skills.SkillCatalog, agentName string) *InputHandler {
 	// 初始化命令注册表
 	registry := cmd.NewCommandRegistry()
 
 	// 注册命令
 	exitCmd := cmd.NewExitCommand()
-	helpCmd := cmd.NewHelpCommand(registry)
+	helpCmd := cmd.NewHelpCommand(registry, agentName)
 	showSkillsCmd := cmd.NewShowSkillsCommand()
 	installSkillCmd := cmd.NewInstallSkillCommand()
 	removeSkillCmd := cmd.NewRemoveSkillCommand()
@@ -161,7 +162,7 @@ func (h *InputHandler) ProcessInput(input string) (string, bool, error) {
 		if err != nil {
 			logs.Error("Error executing command: %v", err)
 		} else if cmd.Name() != "exit" {
-			logs.Info("Command executed successfully!")
+			logs.Debug("Command executed successfully!")
 		}
 		return "", true, nil
 	}

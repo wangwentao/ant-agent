@@ -13,13 +13,13 @@ type AppConfig struct {
 	MaxTokens int
 
 	// 运行时配置
-	Stream        bool
-	OutputFormat  string
-	SessionID     string
-	SystemPrompt  string
-	ACPMode       bool
-	ACPConn       interface{}
-	ACPSessionID  string
+	Stream       bool
+	OutputFormat string
+	SessionID    string
+	SystemPrompt string
+	ACPMode      bool
+	ACPConn      interface{}
+	ACPSessionID string
 
 	// Agent 信息
 	AgentName    string
@@ -29,12 +29,12 @@ type AppConfig struct {
 // DefaultConfig 返回默认配置
 func DefaultConfig() *AppConfig {
 	return &AppConfig{
-		Model:         "claude-3-opus-20240229",
-		BaseURL:       "https://api.anthropic.com",
-		MaxTokens:     1024,
-		Stream:        true,
-		AgentName:     "ant-agent",
-		AgentVersion:  "1.0.0",
+		Model:        "qwen3.5-27b-claude-4.6-opus-reasoning-distilled",
+		BaseURL:      "http://127.0.0.1:1234",
+		MaxTokens:    4096,
+		Stream:       true,
+		AgentName:    "Ant",
+		AgentVersion: "1.0.0",
 	}
 }
 
@@ -52,6 +52,7 @@ func LoadAppConfig() (*AppConfig, error) {
 	appConfig.Model = baseConfig.Model
 	appConfig.BaseURL = baseConfig.BaseURL
 	appConfig.MaxTokens = baseConfig.MaxTokens
+	appConfig.AgentName = baseConfig.Name
 
 	return appConfig, nil
 }
@@ -67,19 +68,19 @@ func (c *AppConfig) GetAPIKey() string {
 // ToMap 转换为 map[string]interface{}
 func (c *AppConfig) ToMap() map[string]interface{} {
 	return map[string]interface{}{
-		"api_key":         c.APIKey,
-		"model":           c.Model,
-		"base_url":        c.BaseURL,
-		"max_tokens":      c.MaxTokens,
-		"stream":          c.Stream,
-		"output_format":   c.OutputFormat,
-		"session_id":      c.SessionID,
-		"system_prompt":   c.SystemPrompt,
-		"acp_mode":        c.ACPMode,
-		"acp_conn":        c.ACPConn,
-		"acp_session_id":  c.ACPSessionID,
-		"agent_name":      c.AgentName,
-		"agent_version":   c.AgentVersion,
+		"api_key":        c.APIKey,
+		"model":          c.Model,
+		"base_url":       c.BaseURL,
+		"max_tokens":     c.MaxTokens,
+		"stream":         c.Stream,
+		"output_format":  c.OutputFormat,
+		"session_id":     c.SessionID,
+		"system_prompt":  c.SystemPrompt,
+		"acp_mode":       c.ACPMode,
+		"acp_conn":       c.ACPConn,
+		"acp_session_id": c.ACPSessionID,
+		"agent_name":     c.AgentName,
+		"agent_version":  c.AgentVersion,
 	}
 }
 

@@ -7,13 +7,15 @@ import (
 
 // HelpCommand 帮助命令
 type HelpCommand struct {
-	registry *CommandRegistry
+	registry  *CommandRegistry
+	agentName string
 }
 
 // NewHelpCommand 创建新的帮助命令
-func NewHelpCommand(registry *CommandRegistry) *HelpCommand {
+func NewHelpCommand(registry *CommandRegistry, agentName string) *HelpCommand {
 	return &HelpCommand{
-		registry: registry,
+		registry:  registry,
+		agentName: agentName,
 	}
 }
 
@@ -29,19 +31,19 @@ func (c *HelpCommand) Description() string {
 
 // Execute 执行命令
 func (c *HelpCommand) Execute(args []string, skillCatalog *skills.SkillCatalog) error {
-	fmt.Println("=== Ant-Agent Help ===")
+	fmt.Printf("=== %s Help ===\n", c.agentName)
 	fmt.Println("Available commands:")
-	
+
 	// 显示所有命令
 	commands := c.registry.GetCommands()
 	for name, cmd := range commands {
 		fmt.Printf("  %-20s - %s\n", name, cmd.Description())
 	}
-	
+
 	fmt.Println("\nOptions:")
 	fmt.Println("  --skill <name>   - Install specific skill from skills directory")
 	fmt.Println("  --skills <names> - Install multiple skills (space-separated)")
-	
+
 	fmt.Println("\nType your message to interact with the agent.")
 	fmt.Println("\nThe agent can use the following tools:")
 	fmt.Println("  list_skills      - List all available skills")
@@ -50,6 +52,6 @@ func (c *HelpCommand) Execute(args []string, skillCatalog *skills.SkillCatalog) 
 	fmt.Println("  read_file        - Read the content of a file")
 	fmt.Println("  write_file       - Write content to a file")
 	fmt.Println("  edit_file        - Edit a file by replacing a string")
-	
+
 	return nil
 }
