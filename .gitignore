@@ -6,6 +6,7 @@ vendor/
 
 # 配置文件
 config.json
+mcp.json
 
 # 历史文件
 .ant-agent-history

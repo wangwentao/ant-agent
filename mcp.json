@@ -1,7 +1,4 @@
 {
   "mcpServers": {
-    "everything": {
-      "endpoint": "http://localhost:8090"
-    }
   }
 }
