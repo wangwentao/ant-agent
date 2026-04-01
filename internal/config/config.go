@@ -14,6 +14,7 @@ type Config struct {
 	BaseURL   string `json:"base_url"`
 	MaxTokens int    `json:"max_tokens"`
 	Name      string `json:"name"`
+	LogLevel  string `json:"log_level"`
 }
 
 // LoadConfig 读取配置文件
@@ -62,6 +63,9 @@ func LoadConfig() (Config, error) {
 	}
 	if config.Name == "" {
 		config.Name = "Ant"
+	}
+	if config.LogLevel == "" {
+		config.LogLevel = "info"
 	}
 
 	return config, nil

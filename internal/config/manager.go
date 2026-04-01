@@ -11,6 +11,7 @@ type AppConfig struct {
 	Model     string
 	BaseURL   string
 	MaxTokens int
+	LogLevel  string
 
 	// 运行时配置
 	Stream       bool
@@ -32,6 +33,7 @@ func DefaultConfig() *AppConfig {
 		Model:        "qwen3.5-27b-claude-4.6-opus-reasoning-distilled",
 		BaseURL:      "http://127.0.0.1:1234",
 		MaxTokens:    4096,
+		LogLevel:     "info",
 		Stream:       true,
 		AgentName:    "Ant",
 		AgentVersion: "1.0.0",
@@ -53,6 +55,7 @@ func LoadAppConfig() (*AppConfig, error) {
 	appConfig.BaseURL = baseConfig.BaseURL
 	appConfig.MaxTokens = baseConfig.MaxTokens
 	appConfig.AgentName = baseConfig.Name
+	appConfig.LogLevel = baseConfig.LogLevel
 
 	return appConfig, nil
 }
@@ -72,6 +75,7 @@ func (c *AppConfig) ToMap() map[string]interface{} {
 		"model":          c.Model,
 		"base_url":       c.BaseURL,
 		"max_tokens":     c.MaxTokens,
+		"log_level":      c.LogLevel,
 		"stream":         c.Stream,
 		"output_format":  c.OutputFormat,
 		"session_id":     c.SessionID,
@@ -97,6 +101,9 @@ func (c *AppConfig) FromMap(m map[string]interface{}) {
 	}
 	if val, ok := m["max_tokens"].(int); ok {
 		c.MaxTokens = val
+	}
+	if val, ok := m["log_level"].(string); ok {
+		c.LogLevel = val
 	}
 	if val, ok := m["stream"].(bool); ok {
 		c.Stream = val

@@ -7,6 +7,7 @@ import (
 	"ant-agent/internal/cmd"
 	"ant-agent/internal/logs"
 	"ant-agent/internal/skills"
+	"ant-agent/internal/tools"
 
 	"github.com/chzyer/readline"
 )
@@ -16,17 +17,18 @@ type InputHandler struct {
 	skillCatalog *skills.SkillCatalog
 	readline     *readline.Instance
 	cmdRegistry  *cmd.CommandRegistry
+	toolRegistry *tools.ToolRegistry
 	agentName    string
 }
 
 // NewInputHandler 创建一个新的输入处理器
-func NewInputHandler(skillCatalog *skills.SkillCatalog, agentName string) *InputHandler {
+func NewInputHandler(skillCatalog *skills.SkillCatalog, toolRegistry *tools.ToolRegistry, agentName string) *InputHandler {
 	// 初始化命令注册表
 	registry := cmd.NewCommandRegistry()
 
 	// 注册命令
 	exitCmd := cmd.NewExitCommand()
-	helpCmd := cmd.NewHelpCommand(registry, agentName)
+	helpCmd := cmd.NewHelpCommand(registry, agentName, toolRegistry)
 	showSkillsCmd := cmd.NewShowSkillsCommand()
 	installSkillCmd := cmd.NewInstallSkillCommand()
 	removeSkillCmd := cmd.NewRemoveSkillCommand()
@@ -50,6 +52,7 @@ func NewInputHandler(skillCatalog *skills.SkillCatalog, agentName string) *Input
 		return &InputHandler{
 			skillCatalog: skillCatalog,
 			cmdRegistry:  registry,
+			toolRegistry: toolRegistry,
 		}
 	}
 
@@ -57,6 +60,7 @@ func NewInputHandler(skillCatalog *skills.SkillCatalog, agentName string) *Input
 		skillCatalog: skillCatalog,
 		readline:     rl,
 		cmdRegistry:  registry,
+		toolRegistry: toolRegistry,
 	}
 }
 
