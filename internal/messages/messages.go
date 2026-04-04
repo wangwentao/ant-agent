@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 
 	"ant-agent/internal/config"
@@ -35,22 +36,51 @@ func NewMessageHandler(skillCatalog *skills.SkillCatalog, toolRegistry *tools.To
 // BuildSystemPrompt 构建系统提示
 func (h *MessageHandler) BuildSystemPrompt() string {
 	agentName := h.appConfig.AgentName
-	systemPrompt := "Your name is " + agentName + ". You are a comprehensive, clear-thinking, and logically rigorous personal assistant. You can complete most work and life tasks, and for tasks in areas where you are not proficient, you can compensate by using skills.\n\n" +
-		"## Available Skills\n" +
-		"Here are the skills you can use:\n"
+
+	// 加载Ant.md文件中的角色和规则部分
+	roleAndRules := h.loadRoleAndRules()
+
+	// 构建系统提示
+	systemPrompt := "# 名称\n" +
+		"你的名字是 " + agentName + "。\n\n" +
+		roleAndRules + "\n"
+
+	// 添加技能部分
+	systemPrompt += h.buildSkillsPrompt()
+
+	return systemPrompt
+}
+
+// buildSkillsPrompt 构建技能部分的提示
+func (h *MessageHandler) buildSkillsPrompt() string {
+	skillsPrompt := "# 技能\n" +
+		"以下是你可以使用的技能：\n"
 
 	// 添加已发现的技能
 	skills := h.skillCatalog.GetSkills()
 	if len(skills) > 0 {
 		for name, skill := range skills {
-			systemPrompt += "- **" + name + "**: " + skill.Description + "\n"
+			skillsPrompt += "- **" + name + "**: " + skill.Description + "\n"
 		}
 	} else {
-		systemPrompt += "- No skills available\n"
+		skillsPrompt += "- 没有可用技能\n"
 	}
-	systemPrompt += "\nYou can view all skills using the `list_skills` tool, and activate specific skills using the `activate_skill` tool to get detailed instructions."
+	skillsPrompt += "\n你可以使用 `list_skills` 工具查看所有技能，使用 `activate_skill` 工具激活特定技能以获取详细说明。"
 
-	return systemPrompt
+	return skillsPrompt
+}
+
+// loadRoleAndRules 从Ant.md文件加载角色和规则部分
+func (h *MessageHandler) loadRoleAndRules() string {
+	// 尝试读取Ant.md文件
+	content, err := os.ReadFile("Ant.md")
+	if err != nil {
+		logs.Warn("Failed to read Ant.md file: %v, using default role and rules", err)
+		// 如果文件不存在，使用默认内容
+		return "# 角色\n你是一位热情、细致、非常有责任心的私人助理，具备广泛的知识和技能，可以胜任日常大部分任务。你善于倾听用户需求，能够清晰地理解任务要求，并提供专业、准确的解决方案。你的回答总是友好、耐心，并且注重细节，确保用户获得最佳的帮助体验。\n\n# 规则\n1. 遇到你不擅长领域的任务时，你可以使用相关技能来弥补，确保能够提供准确的信息和解决方案。\n2. 如果你不确定或者没有足够的信息，直接告诉用户你不确定，不准猜测或编造信息。\n3. 始终保持专业、礼貌的态度，尊重用户的隐私和需求。\n4. 对于复杂任务，你会分解步骤，逐步完成，并及时向用户反馈进度。\n5. 你会根据用户的具体情况，提供个性化的建议和解决方案。\n6. 当使用工具执行任务时，你会清晰地解释你的操作步骤和预期结果。\n7. 如果你遇到技术问题或工具执行失败，你会尝试其他方法，并向用户解释情况。\n8. 始终遵守相关法律法规和道德规范，不参与任何违法或不道德的活动。"
+	}
+
+	return string(content)
 }
 
 // BuildSystemBlocks 构建系统提示块
@@ -114,10 +144,16 @@ func (h *MessageHandler) ProcessMessage(ctx context.Context, client anthropic.Cl
 // buildSystemBlocks 构建系统提示块
 func (h *MessageHandler) buildSystemBlocks(customPrompt string) []anthropic.TextBlockParam {
 	if customPrompt != "" {
+		// 当用户提供了自定义system prompt时，添加技能部分
+		skillsPrompt := h.buildSkillsPrompt()
+
+		// 组合用户自定义prompt和技能部分
+		combinedPrompt := customPrompt + "\n" + skillsPrompt
+
 		return []anthropic.TextBlockParam{
 			{
 				Type: "text",
-				Text: customPrompt,
+				Text: combinedPrompt,
 			},
 		}
 	}

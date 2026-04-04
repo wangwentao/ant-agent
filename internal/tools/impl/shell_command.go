@@ -1,6 +1,7 @@
 package impl
 
 import (
+	"ant-agent/internal/logs"
 	"context"
 	"fmt"
 	"os/exec"
@@ -46,7 +47,7 @@ func (t *ShellCommandTool) Run(ctx context.Context, input map[string]interface{}
 		"dd", "mkfs", "format", "fdisk", "parted",
 		"kill", "killall", "pkill",
 		"sudo", "su", "login", "passwd",
-		"wget", "curl", "ftp", "scp", "sftp",
+		"wget", "ftp", "scp", "sftp",
 	}
 
 	// 检查命令是否包含危险操作
@@ -60,7 +61,7 @@ func (t *ShellCommandTool) Run(ctx context.Context, input map[string]interface{}
 	}
 
 	// 显示执行命令的提示
-	fmt.Printf("Executing command: %s\n", command)
+	logs.Debug("Executing command: %s\n", command)
 
 	// 执行shell命令，添加超时机制
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, 30*time.Second) // 30秒超时
@@ -77,6 +78,6 @@ func (t *ShellCommandTool) Run(ctx context.Context, input map[string]interface{}
 	}
 
 	// 显示命令执行完成的提示
-	fmt.Println("Command executed successfully")
+	logs.Debug("Command executed successfully")
 	return string(output), nil
 }
